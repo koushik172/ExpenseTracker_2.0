@@ -1,23 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function SignupPage() {
+	const submitRef = useRef(null);
+	let navigate = useNavigate();
+
 	const [formData, setFormData] = useState({
 		name: "",
 		email: "",
 		password: "",
 	});
 
-	function handleSubmit(e) {
+	async function handleSubmit(e) {
+		submitRef.current.disabled = true;
 		e.preventDefault();
 		if (!formData.name || !formData.email || !formData.password) {
 			alert("Please fill in all fields.");
 			return;
 		}
 		try {
-			axios.post("http://localhost:3000/user/signup", formData);
+			await axios.post("http://localhost:8080/user/signUp", formData);
+			navigate("/");
 		} catch (err) {
-			console.log(err);
+			alert(err.response.data.error.toUpperCase());
+		} finally {
+			submitRef.current.disabled = false;
 		}
 	}
 
@@ -65,6 +74,7 @@ function SignupPage() {
 					<input
 						type="submit"
 						value="Sign Up"
+						ref={submitRef}
 						onClick={handleSubmit}
 					/>
 				</div>
