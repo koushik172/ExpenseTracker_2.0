@@ -4,7 +4,8 @@ function HomePage() {
 	return (
 		<div>
 			<h1>Welcome to the Home Page!</h1>
-			<a href="/signUp">SignUp</a>
+			<a href="/signup">Sign Up</a>
+			<a href="/login">Login</a>
 		</div>
 	);
 }
