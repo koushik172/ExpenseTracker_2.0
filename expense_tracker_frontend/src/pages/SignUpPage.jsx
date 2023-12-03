@@ -36,7 +36,7 @@ export default function SignupPage() {
 		try {
 			await axios.post("http://localhost:8080/user/signup", formData);
 			setFromStatus("Registered Successfully");
-			navigate("/");
+			navigate("/login");
 		} catch (err) {
 			if (err.response.status === 409) {
 				setFromStatus("User Already Exists!");

@@ -14,7 +14,7 @@ export default function LoginPage() {
 		password: "",
 	});
 
-	const [formError, setFromStatus] = useState("");
+	const [formStatus, setFromStatus] = useState("");
 
 	async function handleSubmit(e) {
 		submitRef.current.disabled = true;
@@ -34,8 +34,9 @@ export default function LoginPage() {
 		}
 
 		try {
-			await axios.post("http://localhost:8080/user/login", formData);
-			navigate("/");
+			let res = await axios.post("http://localhost:8080/user/login", formData);
+			submitRef.current.disabled = false;
+			navigate("/home", { state: { userData: res.data } });
 		} catch (err) {
 			if (err.response.status === 404) {
 				setFromStatus("User Not Found.");
@@ -59,9 +60,7 @@ export default function LoginPage() {
 	return (
 		<div className="h-screen flex justify-center items-center bg-[#3081D0]">
 			<form className="flex flex-col text-xl items-center gap-4 bg-[#dfdd61] p-4 rounded-md  text-[#33689e]">
-				<p className="text-2xl font-bold underline w-full flex justify-center">
-					WELCOME BACK!!!
-				</p>
+				<p className="text-2xl font-bold underline w-full flex justify-center">WELCOME BACK!!!</p>
 				<div className="flex flex-col gap-1">
 					<label htmlFor="name">Email</label>
 					<input
@@ -84,18 +83,9 @@ export default function LoginPage() {
 						onChange={handleChange}
 					/>
 				</div>
-				{formError && (
-					<p className="flex justify-center text-slate-600 underline">
-						{formError}
-					</p>
-				)}
+				{formStatus && <p className="flex justify-center text-slate-600 underline">{formStatus}</p>}
 				<div className="bg-sky-400 hover:bg-sky-300 p-2 rounded-md">
-					<input
-						type="submit"
-						value="Login"
-						ref={submitRef}
-						onClick={handleSubmit}
-					/>
+					<input type="submit" value="Login" ref={submitRef} onClick={handleSubmit} />
 				</div>
 				<p>
 					New User?{"  "}
