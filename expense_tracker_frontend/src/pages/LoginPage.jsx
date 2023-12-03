@@ -7,12 +7,12 @@ export default function LoginPage() {
 	const submitRef = useRef(null);
 	let navigate = useNavigate();
 
-	const emailRegex = /^[a-zA-Z0-9]+@(?:[a-zA-Z0-9]+\.)+[A-Za-z]+$/;
-
 	const [formData, setFormData] = useState({
 		email: "",
 		password: "",
 	});
+
+	const emailRegex = /^[a-zA-Z0-9]+@(?:[a-zA-Z0-9]+\.)+[A-Za-z]+$/;
 
 	const [formStatus, setFromStatus] = useState("");
 
@@ -35,8 +35,10 @@ export default function LoginPage() {
 
 		try {
 			let res = await axios.post("http://localhost:8080/user/login", formData);
+			localStorage.setItem("token", res.data.token);
+			localStorage.setItem("username", res.data.username);
 			submitRef.current.disabled = false;
-			navigate("/home", { state: { userData: res.data } });
+			navigate("/home");
 		} catch (err) {
 			if (err.response.status === 404) {
 				setFromStatus("User Not Found.");

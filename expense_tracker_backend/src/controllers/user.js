@@ -1,7 +1,10 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 import User from "../models/user.js";
 import Expense from "../models/expense.js";
+
+const secretKey = "secretKey";
 
 export const signUp = async (req, res) => {
 	let hash;
@@ -29,12 +32,14 @@ export const signUp = async (req, res) => {
 export const login = async (req, res) => {
 	User.findOne({ where: { email: req.body.email } })
 		.then(async (result) => {
+			// password get a binay value to see if it is correct.
 			let password = await bcrypt.compare(req.body.password, result.password);
 			if (password) {
+				const token = jwt.sign({ username: result.name, userId: result.id }, secretKey);
 				res.status(200).json({
 					Messege: "Login Sucessful",
 					username: result.name,
-					id: result.id,
+					token: token,
 				});
 			} else {
 				res.status(401).send({ Messege: "Wrong Password" });
@@ -47,8 +52,8 @@ export const login = async (req, res) => {
 };
 
 export const addExpense = async (req, res) => {
-	let user = await User.findOne({ where: { id: req.params.id } });
-	let response = await user.createExpense({
+	console.log(req.user);
+	let response = await req.user.createExpense({
 		name: req.body.name,
 		description: req.body.description,
 		type: req.body.type,
@@ -60,7 +65,7 @@ export const addExpense = async (req, res) => {
 export const getExpenses = async (req, res) => {
 	let expenses;
 	try {
-		expenses = await Expense.findAll({ where: { userId: req.params.id } });
+		expenses = await Expense.findAll({ where: { userId: req.user.id } });
 		res.status(200).json(expenses);
 	} catch (err) {
 		res.status(404).json("Unknown Error Occoured!");

@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
 	// Holds user data passed via url using useNavigate
-	const { state } = useLocation();
-	const data = state.userData;
 
 	const navigate = useNavigate();
 
 	const submitRef = useRef(false);
 
+	const [username, setUsername] = useState("");
+
+	// To hold the array of expenses
 	const [expenses, setExpenses] = useState("");
 
 	// To show Erros and Other Messages
@@ -31,7 +32,7 @@ export default function HomePage() {
 		});
 	}
 
-	async function handleSubmit(e) {
+	async function addExpense(e) {
 		submitRef.current.disabled = true;
 		submitRef.current.classList.add("cursor-wait", "bg-gray-500", "text-sky-300", "hover:bg-gray-500");
 		e.preventDefault();
@@ -45,7 +46,10 @@ export default function HomePage() {
 		}
 
 		try {
-			let res = await axios.post(`http://localhost:8080/user/add-expense/${data.id}`, formData);
+			let token = localStorage.getItem("token");
+			let res = await axios.post(`http://localhost:8080/user/add-expense/`, formData, {
+				headers: { Authorization: localStorage.getItem("token") },
+			});
 			getExpenses();
 			console.log(res);
 		} catch (err) {
@@ -58,7 +62,7 @@ export default function HomePage() {
 
 	async function getExpenses() {
 		try {
-			let res = await axios.get(`http://localhost:8080/user/get-expenses/${data.id}`);
+			let res = await axios.get(`http://localhost:8080/user/get-expenses/`, { headers: { Authorization: localStorage.getItem("token") } });
 			setExpenses(res.data);
 		} catch (err) {
 			setFromStatus(err.data);
@@ -68,7 +72,9 @@ export default function HomePage() {
 	async function deleteExpense(e) {
 		let expenseId = e.target.closest("li").id;
 		try {
-			await axios.delete(`http://localhost:8080/user/delete-expense/${expenseId}`);
+			await axios.delete(`http://localhost:8080/user/delete-expense/${expenseId}`, {
+				headers: { Authorization: localStorage.getItem("token") },
+			});
 			getExpenses();
 		} catch (err) {
 			console.log(err);
@@ -77,9 +83,10 @@ export default function HomePage() {
 
 	// UseEffect to fetch the expenses during the first page load.
 	useEffect(() => {
-		if (!data) {
+		if (!localStorage.getItem("token")) {
 			navigate("/login");
 		}
+		setUsername(localStorage.getItem("username"));
 		getExpenses();
 	}, []);
 
@@ -89,7 +96,7 @@ export default function HomePage() {
 		<div className="flex flex-col justify-start bg-[#3081D0] h-screen">
 			<form className="flex flex-col items-center bg-[#dfdd61] text-[#33689e] my-[2%] mx-[5%] rounded-md">
 				<div className="flex justify-center">
-					<p className="p-4 font-bold text-4xl">Welcome {data.username}</p>
+					<p className="p-4 font-bold text-4xl">Welcome {username}</p>
 				</div>
 
 				<div className="text-xl flex justify-evenly gap-4 px-8 md:px-0 py-4 flex-col md:flex-row w-full">
@@ -135,7 +142,7 @@ export default function HomePage() {
 						className="bg-sky-400 hover:bg-sky-300 p-2 rounded-md my-4"
 						type="submit"
 						value="Add Expense"
-						onClick={handleSubmit}
+						onClick={addExpense}
 					/>
 				</div>
 			</form>
