@@ -2,9 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 import User from "../models/user.js";
-import Expense from "../models/expense.js";
 
-const secretKey = "secretKey";
+const secretKey = process.env.JWT_SECRET_KEY;
 
 export const signUp = async (req, res) => {
 	let hash;
@@ -35,7 +34,7 @@ export const login = async (req, res) => {
 			// password get a binay value to see if it is correct.
 			let password = await bcrypt.compare(req.body.password, result.password);
 			if (password) {
-				const token = jwt.sign({ username: result.name, userId: result.id }, secretKey);
+				const token = jwt.sign({ username: result.name, userId: result.id }, process.env.JWT_SECRET_KEY);
 				res.status(200).json({
 					Messege: "Login Sucessful",
 					username: result.name,
@@ -51,32 +50,10 @@ export const login = async (req, res) => {
 		});
 };
 
-export const addExpense = async (req, res) => {
-	console.log(req.user);
-	let response = await req.user.createExpense({
-		name: req.body.name,
-		description: req.body.description,
-		type: req.body.type,
-	});
-	console.log(response);
-	res.status(201).json({ message: "Expense Added" });
-};
-
-export const getExpenses = async (req, res) => {
-	let expenses;
-	try {
-		expenses = await Expense.findAll({ where: { userId: req.user.id } });
-		res.status(200).json(expenses);
-	} catch (err) {
-		res.status(404).json("Unknown Error Occoured!");
-	}
-};
-
-export const deleteExpense = async (req, res) => {
-	try {
-		await Expense.destroy({ where: { id: req.params.id } });
-		res.status(200).json("Expense Deleted");
-	} catch (err) {
-		res.status(500).json("Unknown Error.");
+export const isPremuim = (req, res) => {
+	if (req.user.premium === true) {
+		res.status(200).json(true);
+	} else {
+		res.status(200).json(false);
 	}
 };

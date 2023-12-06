@@ -38,7 +38,7 @@ export default function LoginPage() {
 			localStorage.setItem("token", res.data.token);
 			localStorage.setItem("username", res.data.username);
 			submitRef.current.disabled = false;
-			navigate("/home");
+			navigate("/");
 		} catch (err) {
 			if (err.response.status === 404) {
 				setFromStatus("User Not Found.");
