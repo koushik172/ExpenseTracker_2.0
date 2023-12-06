@@ -3,7 +3,7 @@ import Expense from "../models/expense.js";
 export const addExpense = async (req, res) => {
 	console.log(req.user);
 	let response = await req.user.createExpense({
-		name: req.body.name,
+		amount: req.body.amount,
 		description: req.body.description,
 		type: req.body.type,
 	});

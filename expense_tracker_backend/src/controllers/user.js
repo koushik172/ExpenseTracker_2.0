@@ -1,9 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import sequelize from "../utils/database.js";
 import User from "../models/user.js";
-
-const secretKey = process.env.JWT_SECRET_KEY;
 
 export const signUp = async (req, res) => {
 	let hash;
@@ -56,4 +55,12 @@ export const isPremuim = (req, res) => {
 	} else {
 		res.status(200).json(false);
 	}
+};
+
+export const leaderboard = async (req, res) => {
+	if (!req.user.premium) return res.status(401).json("Unauthorised");
+	const results = await sequelize.query(
+		"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
+	);
+	res.status(200).json(results[0]);
 };

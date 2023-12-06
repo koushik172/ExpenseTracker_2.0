@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import BuyPremium from "../components/home/BuyPremiun";
 import ExpenseList from "../components/home/ExpenseList";
+import Leaderboard from "../components/home/Leaderboard";
 
 export default function HomePage() {
 	const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function HomePage() {
 
 	// To handle Form Data
 	const [formData, setFormData] = useState({
-		name: "",
+		amount: "",
 		description: "",
 		type: "",
 	});
@@ -36,10 +37,13 @@ export default function HomePage() {
 		e.preventDefault();
 		setFromStatus("");
 
-		if (!formData.name || !formData.description || !formData.type) {
+		if (!formData.amount || !formData.description || !formData.type) {
 			setFromStatus("Please fill in all fields.");
 			submitRef.current.classList.remove("cursor-wait", "bg-gray-500", "text-sky-300", "hover:bg-gray-500");
 			submitRef.current.disabled = false;
+			setTimeout(() => {
+				setFromStatus("");
+			}, 5000);
 			return;
 		}
 
@@ -53,7 +57,15 @@ export default function HomePage() {
 		} finally {
 			submitRef.current.disabled = false;
 			submitRef.current.classList.remove("cursor-wait", "bg-gray-500", "text-sky-300", "hover:bg-gray-500");
+			setTimeout(() => {
+				setFromStatus("");
+			}, 5000);
 		}
+	}
+
+	function logout() {
+		localStorage.clear();
+		navigate("/login");
 	}
 
 	useEffect(() => {
@@ -65,7 +77,8 @@ export default function HomePage() {
 
 	return (
 		<div className="flex flex-col bg-[#3081D0] h-screen">
-			<form className="flex flex-col bg-[#dfdd61] text-[#33689e] my-[2%] mx-[5%] rounded-md">
+			{/* Form to add new expenses */}
+			<form className="flex flex-col bg-[#dfdd61] text-[#33689e] mt-[2%] mx-[5%] rounded-md">
 				<div className="flex items-center justify-center">
 					<p className="p-4 font-bold text-4xl flex">Welcome {username}</p>
 					<BuyPremium />
@@ -73,10 +86,10 @@ export default function HomePage() {
 
 				<div className="text-xl flex justify-evenly gap-4 px-8 md:px-0 py-4 flex-col md:flex-row w-full">
 					<div className="flex flex-col lg:flex-row gap-2">
-						<label htmlFor="name" className="p-1 font-semibold">
-							Name
+						<label htmlFor="amount" className="p-1 font-semibold">
+							Amount
 						</label>
-						<input className="p-1 rounded-md bg-[#f5eec9]" type="text" name="name" value={formData.name} onChange={handleChange} />
+						<input className="p-1 rounded-md bg-[#f5eec9]" type="number" name="amount" value={formData.amount} onChange={handleChange} />
 					</div>
 
 					<div className="flex flex-col lg:flex-row gap-2">
@@ -123,7 +136,17 @@ export default function HomePage() {
 				</div>
 			</form>
 
+			<Leaderboard />
+
 			<ExpenseList formStatus={formStatus} setFromStatus={setFromStatus} />
+
+			<div className="flex justify-center items-center">
+				<button className="text-xl text-red-900 bg-red-400 hover:bg-red-300 p-2 w-fit rounded-md m-4" onClick={logout}>
+					Logout
+				</button>
+			</div>
+
+			<p className="whitespace-pre"> </p>
 		</div>
 	);
 }

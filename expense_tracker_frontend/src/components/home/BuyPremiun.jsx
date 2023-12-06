@@ -88,9 +88,7 @@ export default function BuyPremium() {
 		isPremium();
 	}, []);
 
-	useEffect(() => {
-		console.log(premium);
-	}, [premium]);
+	useEffect(() => {}, [premium]);
 
 	return (
 		<button

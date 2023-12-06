@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 
 export default function ExpenseList(props) {
+	let navigate = useNavigate();
+
 	// To hold the array of expenses
 	const [expenses, setExpenses] = useState("");
 
@@ -11,8 +15,8 @@ export default function ExpenseList(props) {
 			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/`, { headers: { Authorization: localStorage.getItem("token") } });
 			setExpenses(res.data);
 		} catch (err) {
-			console.log(err);
-			setFromStatus(err.message);
+			console.log(err, "get expense error");
+			navigate("/login");
 		}
 	}
 
@@ -24,6 +28,9 @@ export default function ExpenseList(props) {
 			});
 			await getExpenses();
 			props.setFromStatus("Expense Deleted");
+			setTimeout(() => {
+				props.setFromStatus("");
+			}, 5000);
 		} catch (err) {
 			console.log(err);
 		}
@@ -33,9 +40,7 @@ export default function ExpenseList(props) {
 		getExpenses();
 	}, []);
 
-	useEffect(() => {
-		getExpenses();
-	}, [props.formStatus]);
+	useEffect(() => {}, [props.formStatus]);
 
 	return (
 		<div className="flex flex-col items-center bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
@@ -43,9 +48,10 @@ export default function ExpenseList(props) {
 				{expenses.length === 0 && <li className="flex justify-center">No Records Found</li>}
 				{Object.values(expenses).map((element, key) => {
 					return (
-						<li className="flex justify-between" id={element.id} key={key}>
-							<p>
-								{element.name} - {element.description} - {element.type}
+						<li className="flex justify-between hover:bg-slate-400 items-center p-2 rounded-md" id={element.id} key={key}>
+							<p className="flex gap-6">
+								<a>{key + 1}.</a>
+								{element.amount} - {element.description} - {element.type}
 							</p>
 							<div className="flex gap-4">
 								<button className="text-xl bg-sky-400 hover:bg-sky-300 p-2 rounded-md whitespace-pre"> Edit </button>

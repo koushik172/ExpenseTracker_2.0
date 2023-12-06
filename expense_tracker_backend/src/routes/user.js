@@ -11,4 +11,6 @@ userRouter.post("/login", userController.login);
 
 userRouter.get("/is-premium", Authenticate, userController.isPremuim);
 
-export default userRouter; 
+userRouter.get("/leaderboard", Authenticate, userController.leaderboard);
+
+export default userRouter;
