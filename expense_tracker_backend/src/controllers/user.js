@@ -75,3 +75,4 @@ export const leaderboard = async (req, res) => {
 	});
 	res.status(200).json(users);
 };
+ 
