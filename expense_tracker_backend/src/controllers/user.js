@@ -6,6 +6,7 @@ import User from "../models/user.js";
 import Expense from "../models/expense.js";
 
 export const signUp = async (req, res) => {
+	const transaction = await sequelize.transaction();
 	let hash;
 
 	try {
@@ -14,18 +15,23 @@ export const signUp = async (req, res) => {
 		res.status(500).send({ Message: "Unknown Error" });
 	}
 
-	User.create({
-		name: req.body.name,
-		email: req.body.email,
-		password: hash,
-	})
-		.then(() => {
-			res.status(201).send({ Message: "User Created Sucessfully." });
-		})
-		.catch((err) => {
-			console.log(err.errors);
-			res.status(500).send({ Message: "User Already Exists." });
-		});
+	try {
+		await User.create(
+			{
+				name: req.body.name,
+				email: req.body.email,
+				password: hash,
+				total_expense: 0,
+			},
+			{ transaction: transaction }
+		);
+		res.status(201).send({ Message: "User Created Sucessfully." });
+		await transaction.commit();
+	} catch (error) {
+		console.log(error);
+		res.status(500).send({ Message: "User Already Exists." });
+		await transaction.rollback();
+	}
 };
 
 export const login = async (req, res) => {
@@ -64,9 +70,7 @@ export const leaderboard = async (req, res) => {
 	// 	"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
 	// );
 	const users = await User.findAll({
-		attributes: ["name", [sequelize.fn("sum", sequelize.col("expenses.amount")), "total_expense"]],
-		include: [{ model: Expense, attributes: [] }],
-		group: ["users.id"],
+		attributes: ["name", "total_expense"],
 		order: [[sequelize.col("total_expense"), "DESC"]],
 	});
 	res.status(200).json(users);

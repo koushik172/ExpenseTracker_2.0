@@ -2,10 +2,12 @@ import crypto from "crypto";
 
 import Razorpay from "razorpay";
 
+import sequelize from "../utils/database.js";
 import Order from "../models/orders.js";
 
 export const newOrder = async (req, res) => {
 	if (req.user.premium) res.status(500).json("Already a Premium User");
+	const transaction = await sequelize.transaction();
 	try {
 		const instance = new Razorpay({
 			key_id: process.env.RAZORPAY_KEY_ID,
@@ -22,24 +24,25 @@ export const newOrder = async (req, res) => {
 
 		if (!order) return res.status(500).send("Some error occured");
 
-		console.log(order);
-
-		await req.user
-			.createOrder({
+		await req.user.createOrder(
+			{
 				orderCreationId: order.id,
 				amount: order.amount,
 				currency: order.currency,
 				status: "PENDING",
-			})
-			.catch((err) => console.log(err));
-
+			},
+			{ transaction: transaction }
+		);
 		res.json(order);
+		await transaction.commit();
 	} catch (error) {
 		res.status(500).send(error);
+		await transaction.rollback();
 	}
 };
 
 export const orderSuccess = async (req, res) => {
+	const transaction = await sequelize.transaction();
 	try {
 		// getting the details back from our font-end
 		const { orderCreationId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
@@ -65,9 +68,10 @@ export const orderSuccess = async (req, res) => {
 
 		await Order.update(
 			{ razorpayOrderId: razorpayOrderId, razorpayPaymentId: razorpayPaymentId, razorpaySignature: razorpaySignature, status: "SUCCESS" },
-			{ where: { orderCreationId: orderCreationId } }
+			{ where: { orderCreationId: orderCreationId } },
+			{ transaction: transaction }
 		);
-		req.user.update({ premium: true });
+		await req.user.update({ premium: 1 }, { transaction: transaction });
 
 		res.json({
 			msg: "success",
@@ -75,8 +79,9 @@ export const orderSuccess = async (req, res) => {
 			paymentId: razorpayPaymentId,
 		});
 	} catch (error) {
-		await Order.update({ status: "FAILED" }, { where: { orderCreationId: orderCreationId } });
-		console.log(error);
+		await Order.update({ status: "FAILED" }, { where: { orderCreationId: orderCreationId } }, { transaction: transaction });
 		res.status(500).send(error);
+	} finally {
+		await transaction.commit();
 	}
 };

@@ -15,15 +15,17 @@ export default function Leaderboard() {
 			.catch((err) => console.log(err, "getLeaderboard"));
 	}
 
+	async function handleLeaderboardClick() {
+		setShowLeaderboard(!showLeaderboard);
+	}
+
 	useEffect(() => {
 		getLeaderboard();
 	}, []);
 
-	useEffect(() => {}, [leaderboard]);
-
 	return (
 		<div className="flex  bg-sky-500 text-[#3c566f] mx-[5%] my-[1%] rounded-md">
-			<button className="bg-[#dfdd61]  p-2 rounded-r-lg rounded-l-md font-bold" onClick={() => setShowLeaderboard(!showLeaderboard)}>
+			<button className="bg-[#dfdd61]  p-2 rounded-r-lg rounded-l-md font-bold" onClick={handleLeaderboardClick}>
 				{!showLeaderboard ? "Show" : "Hide"} LeaderBoard
 			</button>
 			<div></div>
