@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import sequelize from "../utils/database.js";
 import User from "../models/user.js";
+import Expense from "../models/expense.js";
 
 export const signUp = async (req, res) => {
 	let hash;
@@ -59,8 +60,14 @@ export const isPremuim = (req, res) => {
 
 export const leaderboard = async (req, res) => {
 	if (!req.user.premium) return res.status(401).json("Unauthorised");
-	const results = await sequelize.query(
-		"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
-	);
-	res.status(200).json(results[0]);
+	// const results = await sequelize.query(
+	// 	"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
+	// );
+	const users = await User.findAll({
+		attributes: ["name", [sequelize.fn("sum", sequelize.col("expenses.amount")), "total_expense"]],
+		include: [{ model: Expense, attributes: [] }],
+		group: ["users.id"],
+		order: [[sequelize.col("total_expense"), "DESC"]],
+	});
+	res.status(200).json(users);
 };

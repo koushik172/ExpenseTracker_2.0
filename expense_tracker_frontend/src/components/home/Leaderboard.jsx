@@ -32,7 +32,7 @@ export default function Leaderboard() {
 					{leaderboard.length === 0 && <li className="flex justify-center">Requires Premium</li>}
 					{Object.values(leaderboard).map((element, key) => {
 						return (
-							<li className="flex justify-between" id={element.id} key={key}>
+							<li className="flex justify-between" key={key}>
 								<p>
 									{key + 1}) {element.name}
 								</p>

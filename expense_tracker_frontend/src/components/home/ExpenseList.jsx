@@ -40,7 +40,9 @@ export default function ExpenseList(props) {
 		getExpenses();
 	}, []);
 
-	useEffect(() => {}, [props.formStatus]);
+	useEffect(() => {
+		getExpenses();
+	}, [props.formStatus]);
 
 	return (
 		<div className="flex flex-col items-center bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
