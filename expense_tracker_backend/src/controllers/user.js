@@ -1,11 +1,12 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import { Email } from "../utils/email.js";
+
 import sequelize from "../utils/database.js";
 import User from "../models/user.js";
-import Expense from "../models/expense.js";
 
-export const signUp = async (req, res) => {
+export const signup = async (req, res) => {
 	const transaction = await sequelize.transaction();
 	let hash;
 
@@ -56,7 +57,19 @@ export const login = async (req, res) => {
 		});
 };
 
-export const isPremuim = (req, res) => {
+export const forgot_password = async (req, res, next) => {
+	try {
+		let user = await User.findOne({ where: { email: req.body.email } });
+		let data = { name: user.name, email: user.email, subject: "Password reset request.", body: "Test Email" };
+		await Email(data);
+		res.status(200).json("Password reset link sent.");
+	} catch (error) {
+		console.log(error);
+		res.status(500).json("Email doesn't exist.");
+	}
+};
+
+export const is_premuim = (req, res) => {
 	if (req.user.premium === true) {
 		res.status(200).json(true);
 	} else {
@@ -75,4 +88,3 @@ export const leaderboard = async (req, res) => {
 	});
 	res.status(200).json(users);
 };
- 

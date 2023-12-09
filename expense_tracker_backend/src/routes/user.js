@@ -5,11 +5,13 @@ import { Authenticate } from "../middlewares/auth.js";
 
 const userRouter = express.Router();
 
-userRouter.post("/signup", userController.signUp);
+userRouter.post("/signup", userController.signup);
 
 userRouter.post("/login", userController.login);
 
-userRouter.get("/is-premium", Authenticate, userController.isPremuim);
+userRouter.post("/forgot-password", userController.forgot_password);
+
+userRouter.get("/is-premium", Authenticate, userController.is_premuim);
 
 userRouter.get("/leaderboard", Authenticate, userController.leaderboard);
 
