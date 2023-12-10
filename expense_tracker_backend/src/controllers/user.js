@@ -1,10 +1,13 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 
 import { Email } from "../utils/email.js";
 
 import sequelize from "../utils/database.js";
 import User from "../models/user.js";
+import ForgotPasswordRequest from "../models/forgotPassword.js";
+import { where } from "sequelize";
 
 export const signup = async (req, res) => {
 	const transaction = await sequelize.transaction();
@@ -58,14 +61,61 @@ export const login = async (req, res) => {
 };
 
 export const forgot_password = async (req, res, next) => {
+	const transaction = await sequelize.transaction();
 	try {
 		let user = await User.findOne({ where: { email: req.body.email } });
-		let data = { name: user.name, email: user.email, subject: "Password reset request.", body: "Test Email" };
+
+		let uuid = uuidv4();
+
+		let body = `<p>Click on the link to reset your password</p><p>http://localhost:5173/reset-password/${uuid}</p>`;
+		let data = { name: user.name, email: user.email, subject: "Password reset request.", body: body };
 		await Email(data);
+
+		await user.createForgotPasswordRequest({ id: uuid, isActive: true }, { transaction: transaction });
+
 		res.status(200).json("Password reset link sent.");
+		await transaction.commit();
 	} catch (error) {
 		console.log(error);
 		res.status(500).json("Email doesn't exist.");
+		await transaction.rollback();
+	}
+};
+
+export const reset_password = async (req, res, next) => {
+	const transaction = await sequelize.transaction();
+	let verify = uuidValidate(req.params.id);
+	if (!verify) return res.status(401).json("Invalid Request.");
+
+	let request;
+	let user;
+
+	try {
+		request = await ForgotPasswordRequest.findOne({ where: { id: req.params.id } });
+		if (!request.isActive) return res.status(401).json("Link Expired.");
+		user = await User.findOne({ where: { id: request.userId } });
+	} catch (error) {
+		res.status(404).send("Unauthorised");
+	}
+
+	let hash;
+
+	try {
+		if (req.body.password === req.body.confirmPassword) {
+			hash = await bcrypt.hash(req.body.password, 5);
+		}
+	} catch (err) {
+		res.status(500).send("Password and confirm password dont match.");
+	}
+
+	try {
+		await request.update({ isActive: false }, { transaction: transaction });
+		await user.update({ password: hash }, { transaction: transaction });
+		res.status(200).json("Password Change Successful");
+		transaction.commit();
+	} catch (error) {
+		res.status(500).json("Unknown Error");
+		transaction.rollback();
 	}
 };
 

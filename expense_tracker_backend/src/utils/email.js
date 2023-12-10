@@ -37,7 +37,7 @@ export const Email = async (data) => {
 
 	// Define the email content
 	sendSmtpEmail.subject = data.subject;
-	sendSmtpEmail.htmlContent = `<html><body><p>${data.body}</p></body></html>`;
+	sendSmtpEmail.htmlContent = `<html><body><div>${data.body}</div></body></html>`;
 
 	// Send the email
 	await apiInstance

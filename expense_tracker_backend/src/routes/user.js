@@ -11,6 +11,8 @@ userRouter.post("/login", userController.login);
 
 userRouter.post("/forgot-password", userController.forgot_password);
 
+userRouter.post("/reset-password/:id", userController.reset_password);
+
 userRouter.get("/is-premium", Authenticate, userController.is_premuim);
 
 userRouter.get("/leaderboard", Authenticate, userController.leaderboard);
