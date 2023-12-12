@@ -18,7 +18,8 @@ export default function HomePage() {
 	const [formData, setFormData] = useState({
 		amount: "",
 		description: "",
-		type: "",
+		category: "Food",
+		type: "Expense",
 	});
 
 	function logout() {

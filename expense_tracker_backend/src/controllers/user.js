@@ -7,7 +7,6 @@ import { Email } from "../utils/email.js";
 import sequelize from "../utils/database.js";
 import User from "../models/user.js";
 import ForgotPasswordRequest from "../models/forgotPassword.js";
-import { where } from "sequelize";
 
 export const signup = async (req, res) => {
 	const transaction = await sequelize.transaction();
@@ -33,7 +32,7 @@ export const signup = async (req, res) => {
 		await transaction.commit();
 	} catch (error) {
 		console.log(error);
-		res.status(500).send({ Message: "User Already Exists." });
+		res.status(409).send({ Message: "User Already Exists." });
 		await transaction.rollback();
 	}
 };
@@ -49,6 +48,7 @@ export const login = async (req, res) => {
 					Messege: "Login Sucessful",
 					username: result.name,
 					token: token,
+					premium: result.premium,
 				});
 			} else {
 				res.status(401).send({ Messege: "Wrong Password" });

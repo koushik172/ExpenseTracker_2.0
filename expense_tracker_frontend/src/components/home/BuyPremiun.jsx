@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function BuyPremium() {
+	const navigate = useNavigate();
+
 	const [premium, setPremium] = useState(false);
 
 	function loadScript(src) {
@@ -61,6 +64,8 @@ export default function BuyPremium() {
 				});
 				alert(result.data.msg);
 				setPremium(true);
+				localStorage.setItem("premium", true);
+				navigate("/");
 			},
 			prefill: {
 				name: "Koushik Rajbanshi",
@@ -81,6 +86,7 @@ export default function BuyPremium() {
 
 	async function isPremium() {
 		let res = await axios.get("http://localhost:8080/user/is-premium", { headers: { Authorization: localStorage.getItem("token") } });
+		localStorage.setItem("premium", res.data);
 		setPremium(res.data);
 	}
 

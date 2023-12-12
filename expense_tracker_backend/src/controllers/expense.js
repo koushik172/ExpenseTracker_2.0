@@ -4,17 +4,25 @@ import sequelize from "../utils/database.js";
 
 export const addExpense = async (req, res) => {
 	const transaction = await sequelize.transaction();
+
 	try {
 		await req.user.createExpense(
 			{
 				amount: req.body.amount,
 				description: req.body.description,
 				type: req.body.type,
+				category: req.body.category,
 			},
 			{ transaction: transaction }
 		);
-		let newAmount = parseInt(req.user.total_expense) + parseInt(req.body.amount);
-		await req.user.update({ total_expense: newAmount }, { transaction: transaction });
+		let newTotal;
+		let newAmount = parseInt(req.body.amount);
+		if (req.body.type === "Expense") {
+			newTotal = parseInt(req.user.total_expense) - newAmount;
+		} else {
+			newTotal = parseInt(req.user.total_expense) + newAmount;
+		}
+		await req.user.update({ total_expense: newTotal }, { transaction: transaction });
 		res.status(201).json({ message: "Expense Added" });
 		await transaction.commit();
 	} catch (error) {
@@ -27,7 +35,11 @@ export const addExpense = async (req, res) => {
 export const getExpenses = async (req, res) => {
 	let expenses;
 	try {
-		expenses = await Expense.findAll({ attributes: ["id", "amount", "description", "type"], where: { userId: req.user.id } });
+		expenses = await Expense.findAll({
+			attributes: ["id", "amount", "description", "category", "type", "createdAt"],
+			where: { userId: req.user.id },
+			order: [["createdAt", "DESC"]],
+		});
 		res.status(200).json({ expenses: expenses, total_expense: req.user.total_expense });
 	} catch (err) {
 		console.log(err);
@@ -39,8 +51,17 @@ export const deleteExpense = async (req, res) => {
 	const transaction = await sequelize.transaction();
 	try {
 		let expense = await Expense.findOne({ where: { id: req.params.id } });
-		let newAmount = parseInt(req.user.total_expense) - parseInt(expense.amount);
-		await req.user.update({ total_expense: newAmount }, { transaction: transaction });
+
+		console.log(typeof req.user.total_expense, typeof expense.amount, expense.type);
+
+		let newTotal;
+		if (expense.type === "Expense") {
+			newTotal = parseInt(req.user.total_expense) + parseInt(expense.amount);
+		} else {
+			newTotal = parseInt(req.user.total_expense) - parseInt(expense.amount);
+		}
+		await req.user.update({ total_expense: newTotal }, { transaction: transaction });
+
 		await expense.destroy({ transaction: transaction });
 		res.status(200).json("Expense Deleted");
 		await transaction.commit();
@@ -49,4 +70,3 @@ export const deleteExpense = async (req, res) => {
 		await transaction.rollback();
 	}
 };
- 

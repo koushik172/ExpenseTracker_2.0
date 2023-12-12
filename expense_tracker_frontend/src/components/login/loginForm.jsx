@@ -36,6 +36,7 @@ export default function LoginForm() {
 			let res = await axios.post("http://localhost:8080/user/login", formData);
 			localStorage.setItem("token", res.data.token);
 			localStorage.setItem("username", res.data.username);
+			localStorage.setItem("premium", res.data.premium);
 			submitRef.current.disabled = false;
 			navigate("/");
 		} catch (err) {

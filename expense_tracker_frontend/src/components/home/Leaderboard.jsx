@@ -20,7 +20,7 @@ export default function Leaderboard() {
 	}
 
 	useEffect(() => {
-		getLeaderboard();
+		if (localStorage.getItem("premium") === "true") getLeaderboard();
 	}, []);
 
 	return (

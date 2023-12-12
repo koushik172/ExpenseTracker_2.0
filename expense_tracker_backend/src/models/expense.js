@@ -9,11 +9,15 @@ const Expense = sequelize.define("expenses", {
 		allowNull: false,
 		primaryKey: true,
 	},
-	amount: { 
+	amount: {
 		type: Sequelize.DOUBLE,
 		allowNull: false,
 	},
 	description: {
+		type: Sequelize.STRING,
+		allowNull: false,
+	},
+	category: {
 		type: Sequelize.STRING,
 		allowNull: false,
 	},

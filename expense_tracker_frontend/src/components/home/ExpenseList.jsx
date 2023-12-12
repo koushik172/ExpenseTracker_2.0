@@ -1,25 +1,64 @@
 import { useState, useEffect, useContext } from "react";
 
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { format, parse } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 import { FormContext } from "../context/FormContext";
 
 export default function ExpenseList() {
-	const { formStatus, setFromStatus } = useContext(FormContext);
-
 	let navigate = useNavigate();
 
-	// To hold the array of expenses
-	const [expenses, setExpenses] = useState("");
+	const { formStatus, setFromStatus } = useContext(FormContext);
 
+	// ALL EXPENSES FOLLOWED BY TODAY, WEEKLY, MONTHLY, YEARLY
+	const [expenses, setExpenses] = useState(""); // all expenses
+
+	const [dailyExpenses, setDailyExpenses] = useState("");
+	const [monthlyExpenses, setMonthlyExpenses] = useState("");
+	const [yearlyExpenses, setYearlyExpenses] = useState("");
+
+	// STATES TO HANDLE SORTING
+	const [sortOptions, setSortOptions] = useState(localStorage.getItem("sort"));
+
+	// HOLDS TOTAL EXPENSE
 	const [totalExpense, setTotalExpense] = useState("");
 
 	async function getExpenses() {
 		try {
 			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/`, { headers: { Authorization: localStorage.getItem("token") } });
-			setExpenses(res.data.expenses);
 			setTotalExpense(res.data.total_expense);
+			setExpenses(() => {
+				format(new Date(), "dd/mm/yyyy");
+				return res.data.expenses.filter((item) => {
+					let itemDate = new Date(item.createdAt);
+					item.createdAt = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
+					return itemDate;
+				});
+			});
+			setDailyExpenses(() => {
+				let now = new Date();
+				return res.data.expenses.filter((item) => {
+					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					return (
+						itemDate.getDay() === now.getDay() && itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear()
+					);
+				});
+			});
+			setMonthlyExpenses(() => {
+				let now = new Date();
+				return res.data.expenses.filter((item) => {
+					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+				});
+			});
+			setYearlyExpenses(() => {
+				let now = new Date();
+				return res.data.expenses.filter((item) => {
+					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					return itemDate.getFullYear() === now.getFullYear();
+				});
+			});
 		} catch (err) {
 			console.log(err, "get expense error");
 			navigate("/login");
@@ -43,6 +82,12 @@ export default function ExpenseList() {
 		}
 	}
 
+	function handleSort(e) {
+		let option = e.target.value;
+		setSortOptions(option);
+		localStorage.setItem("sort", option);
+	}
+
 	useEffect(() => {
 		getExpenses();
 	}, []);
@@ -51,30 +96,67 @@ export default function ExpenseList() {
 		if (formStatus === "New Expense Added") {
 			getExpenses();
 		}
+		console.log(expenses);
 	}, [formStatus]);
 
 	return (
-		<div className="flex flex-col items-center bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
-			<p className="text-3xl font-bold pt-8">Total Expenses : {totalExpense}</p>
-			<ol className="flex flex-col w-full px-[10%] py-[2%] md:text-2xl gap-2">
-				{expenses.length === 0 && <li className="flex justify-center">No Records Found</li>}
-				{Object.values(expenses).map((element, key) => {
-					return (
-						<li className="flex justify-between hover:bg-slate-400 items-center p-2 rounded-md" id={key} key={key}>
-							<p className="flex gap-6">
-								<a>{key + 1}.</a>
-								{element.amount} - {element.description} - {element.type}
-							</p>
-							<div className="flex gap-4">
-								<button className="text-xl bg-sky-400 hover:bg-sky-300 p-2 rounded-md whitespace-pre"> Edit </button>
-								<button className="text-xl bg-red-400 hover:bg-red-300 p-2 rounded-md" id={element.id} onClick={deleteExpense}>
-									Delete
-								</button>
-							</div>
-						</li>
-					);
-				})}
-			</ol>
+		<div className="bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
+			<div className="flex justify-between px-[2%]  pt-8">
+				<p className="flex justify-center text-3xl font-bold">TOTAL BALANCE : {totalExpense}</p>
+				<button className="flex items-center bg-sky-400 text-[#33689e] p-2 rounded-md">Get Report</button>
+			</div>
+
+			{expenses.length === 0 && <li className="flex justify-center text-2xl pt-8">No Records Found</li>}
+
+			{expenses.length && (
+				<ol className="p-8">
+					<li className="grid grid-cols-6 rounded-md border-2 ">
+						<div className="grid col-span-5 grid-cols-6 justify-items-center font-bold text-3xl m-4">
+							<p></p>
+							<p>Date</p>
+							<p>Amount</p>
+							<p>Description</p>
+							<p>Category</p>
+							<p>Type</p>
+						</div>
+						<div className="m-4 flex justify-center">
+							<select className="w-full h-full text-xl text-center rounded-md bg-[#f5eec9]" onChange={handleSort} value={sortOptions}>
+								<option>All</option>
+								<option>Today</option>
+								<option>Monthly</option>
+								<option>Yearly</option>
+							</select>
+						</div>
+					</li>
+
+					{(() => {
+						console.log(sortOptions);
+						if (sortOptions === "All" || sortOptions === null) return Object.values(expenses);
+						if (sortOptions === "Today") return Object.values(dailyExpenses);
+						if (sortOptions === "Monthly") return Object.values(monthlyExpenses);
+						if (sortOptions === "Yearly") return Object.values(yearlyExpenses);
+					})().map((element, key) => {
+						return (
+							<li className="grid grid-cols-6 py-2" id={key} key={key}>
+								<div className="grid col-span-5 justify-items-center items-center grid-cols-6">
+									<p className="col-start-1">{key + 1} )</p>
+									<p>{element.createdAt}</p>
+									<p>{element.amount}</p>
+									<p>{element.description}</p>
+									<p>{element.category}</p>
+									<p>{element.type}</p>
+								</div>
+								<div className="space-x-4 flex justify-center">
+									<button className="text-xl bg-sky-400 hover:bg-sky-300 p-2 rounded-md whitespace-pre"> Edit </button>
+									<button className="text-xl bg-red-400 hover:bg-red-300 p-2 rounded-md" id={element.id} onClick={deleteExpense}>
+										Delete
+									</button>
+								</div>
+							</li>
+						);
+					})}
+				</ol>
+			)}
 		</div>
 	);
 }

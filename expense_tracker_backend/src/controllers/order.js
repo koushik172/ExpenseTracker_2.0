@@ -36,6 +36,7 @@ export const newOrder = async (req, res) => {
 		res.json(order);
 		await transaction.commit();
 	} catch (error) {
+		console.log(error);
 		res.status(500).send(error);
 		await transaction.rollback();
 	}
@@ -79,10 +80,10 @@ export const orderSuccess = async (req, res) => {
 			paymentId: razorpayPaymentId,
 		});
 	} catch (error) {
+		console.log(error);
 		await Order.update({ status: "FAILED" }, { where: { orderCreationId: orderCreationId } }, { transaction: transaction });
 		res.status(500).send(error);
 	} finally {
 		await transaction.commit();
 	}
 };
- 

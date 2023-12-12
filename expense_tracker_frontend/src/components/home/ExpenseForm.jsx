@@ -16,10 +16,10 @@ export default function ExpenseForm() {
 	}
 
 	async function addExpense(e) {
-        setFromStatus("");
+		setFromStatus("");
 		e.preventDefault();
 
-		if (!formData.amount || !formData.description || !formData.type) {
+		if (!formData.amount || !formData.description || !formData.type || !formData.category) {
 			setFromStatus("Please fill in all fields.");
 			setTimeout(() => {
 				setFromStatus("");
@@ -72,17 +72,34 @@ export default function ExpenseForm() {
 				</div>
 
 				<div className="flex flex-col lg:flex-row gap-2">
-					<label htmlFor="type" className="p-1 font-semibold">
-						Type
+					<label htmlFor="category" className="p-1 font-semibold">
+						Category
 					</label>
-					<select className="p-1 rounded-md bg-[#f5eec9]" name="type" id="type" value={formData.type} onChange={handleChange}>
-						<option></option>
+					<select
+						className="p-1 rounded-md bg-[#f5eec9] items-center"
+						name="category"
+						id="category"
+						value={formData.category}
+						onChange={handleChange}
+					>
 						<option>Food</option>
 						<option>Entertainment</option>
 						<option>Clothes</option>
 						<option>Travel</option>
 						<option>Medical</option>
 						<option>Education</option>
+						<option>Salary</option>
+						<option>Other Income</option>
+					</select>
+				</div>
+
+				<div className="flex flex-col lg:flex-row gap-2">
+					<label htmlFor="type" className="p-1 font-semibold">
+						Tpye
+					</label>
+					<select className="p-1 rounded-md bg-[#f5eec9] items-center" name="type" id="type" value={formData.type} onChange={handleChange}>
+						<option>Expense</option>
+						<option>Income</option>
 					</select>
 				</div>
 			</div>
