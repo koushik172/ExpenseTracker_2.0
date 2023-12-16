@@ -128,7 +128,6 @@ export const is_premuim = (req, res) => {
 };
 
 export const leaderboard = async (req, res) => {
-	if (!req.user.premium) return res.status(401).json("Unauthorised");
 	// const results = await sequelize.query(
 	// 	"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
 	// );

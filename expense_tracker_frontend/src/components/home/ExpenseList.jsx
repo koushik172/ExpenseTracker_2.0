@@ -13,7 +13,6 @@ export default function ExpenseList() {
 
 	// ALL EXPENSES FOLLOWED BY TODAY, WEEKLY, MONTHLY, YEARLY
 	const [expenses, setExpenses] = useState(""); // all expenses
-
 	const [dailyExpenses, setDailyExpenses] = useState("");
 	const [monthlyExpenses, setMonthlyExpenses] = useState("");
 	const [yearlyExpenses, setYearlyExpenses] = useState("");
@@ -23,6 +22,12 @@ export default function ExpenseList() {
 
 	// HOLDS TOTAL EXPENSE
 	const [totalExpense, setTotalExpense] = useState("");
+
+	function handleSort(e) {
+		let option = e.target.value;
+		setSortOptions(option);
+		localStorage.setItem("sort", option);
+	}
 
 	async function getExpenses() {
 		try {
@@ -68,12 +73,14 @@ export default function ExpenseList() {
 	async function deleteExpense(e) {
 		let id = e.target.id;
 		let li = e.target.closest("li");
+		let amount = li.querySelectorAll("p")[2].textContent;
 		try {
 			await axios.delete(`http://localhost:8080/expenses/delete-expense/${id}`, {
 				headers: { Authorization: localStorage.getItem("token") },
 			});
 			li.remove();
 			setFromStatus("Expense Deleted");
+			setTotalExpense((prev) => prev - parseInt(amount));
 			setTimeout(() => {
 				setFromStatus("");
 			}, 5000);
@@ -82,33 +89,43 @@ export default function ExpenseList() {
 		}
 	}
 
-	function handleSort(e) {
-		let option = e.target.value;
-		setSortOptions(option);
-		localStorage.setItem("sort", option);
+	async function getReport(e) {
+		// if (localStorage.getItem("premium") === "false") return alert("Reqires premium");
+		// try {
+		// 	let response = await axios.get("http://localhost:8080/user/report/get-report", {
+		// 		headers: { Authorization: localStorage.getItem("token") },
+		// 	});
+		// 	window.open(response.data, "_blank");
+		// } catch (error) {
+		// 	console.log(error);
+		// }
+		if (localStorage.getItem("premium") === "false") return alert("Reqires premium");
+		navigate("/report");
 	}
 
 	useEffect(() => {
 		getExpenses();
+		localStorage.setItem("sort", "All");
 	}, []);
 
 	useEffect(() => {
 		if (formStatus === "New Expense Added") {
 			getExpenses();
 		}
-		console.log(expenses);
 	}, [formStatus]);
 
 	return (
 		<div className="bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
 			<div className="flex justify-between px-[2%]  pt-8">
 				<p className="flex justify-center text-3xl font-bold">TOTAL BALANCE : {totalExpense}</p>
-				<button className="flex items-center bg-sky-400 text-[#33689e] p-2 rounded-md">Get Report</button>
+				<button className="flex items-center bg-sky-400 text-[#33689e] p-2 rounded-md" onClick={getReport}>
+					Get Report
+				</button>
 			</div>
 
 			{expenses.length === 0 && <li className="flex justify-center text-2xl pt-8">No Records Found</li>}
 
-			{expenses.length && (
+			{
 				<ol className="p-8">
 					<li className="grid grid-cols-6 rounded-md border-2 ">
 						<div className="grid col-span-5 grid-cols-6 justify-items-center font-bold text-3xl m-4">
@@ -130,7 +147,6 @@ export default function ExpenseList() {
 					</li>
 
 					{(() => {
-						console.log(sortOptions);
 						if (sortOptions === "All" || sortOptions === null) return Object.values(expenses);
 						if (sortOptions === "Today") return Object.values(dailyExpenses);
 						if (sortOptions === "Monthly") return Object.values(monthlyExpenses);
@@ -141,13 +157,13 @@ export default function ExpenseList() {
 								<div className="grid col-span-5 justify-items-center items-center grid-cols-6">
 									<p className="col-start-1">{key + 1} )</p>
 									<p>{element.createdAt}</p>
-									<p>{element.amount}</p>
+									{element.type === "Income" ? <p>{element.amount}</p> : <p>-{element.amount}</p>}
 									<p>{element.description}</p>
 									<p>{element.category}</p>
 									<p>{element.type}</p>
 								</div>
 								<div className="space-x-4 flex justify-center">
-									<button className="text-xl bg-sky-400 hover:bg-sky-300 p-2 rounded-md whitespace-pre"> Edit </button>
+									{/* <button className="text-xl bg-sky-400 hover:bg-sky-300 p-2 rounded-md whitespace-pre"> Edit </button> */}
 									<button className="text-xl bg-red-400 hover:bg-red-300 p-2 rounded-md" id={element.id} onClick={deleteExpense}>
 										Delete
 									</button>
@@ -156,7 +172,7 @@ export default function ExpenseList() {
 						);
 					})}
 				</ol>
-			)}
+			}
 		</div>
 	);
 }
