@@ -24,6 +24,7 @@ export default function ExpenseList() {
 	const [totalExpense, setTotalExpense] = useState("");
 
 	// PAGINATION
+	const [rows, setRows] = useState(localStorage.getItem("rows"));
 	const [page, setPage] = useState(1);
 	const [lastPage, setLastPage] = useState("");
 
@@ -31,6 +32,11 @@ export default function ExpenseList() {
 		let option = e.target.value;
 		setSortOptions(option);
 		localStorage.setItem("sort", option);
+	}
+
+	function handleRows(e) {
+		setRows(e.target.value);
+		localStorage.setItem("rows", e.target.value);
 	}
 
 	function handlePages(e) {
@@ -48,10 +54,11 @@ export default function ExpenseList() {
 
 	async function getExpenses() {
 		try {
-			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/${page}`, {
+			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/${rows}/${page}`, {
 				headers: { Authorization: localStorage.getItem("token") },
 			});
-			setLastPage(Math.ceil(res.data.count / 10));
+			console.log(res.data);
+			setLastPage(Math.ceil(res.data.count / rows));
 			setTotalExpense(res.data.total_expense);
 			setExpenses(() => {
 				format(new Date(), "dd/mm/yyyy");
@@ -126,6 +133,7 @@ export default function ExpenseList() {
 	useEffect(() => {
 		getExpenses();
 		localStorage.setItem("sort", "All");
+		localStorage.setItem("rows", 10);
 	}, []);
 
 	useEffect(() => {
@@ -136,7 +144,8 @@ export default function ExpenseList() {
 
 	useEffect(() => {
 		getExpenses();
-	}, [page]);
+		console.log(rows);
+	}, [page, rows]);
 
 	return (
 		<div className="bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
@@ -179,7 +188,7 @@ export default function ExpenseList() {
 						return (
 							<li className="grid grid-cols-6 py-2" id={key} key={key}>
 								<div className="grid col-span-5 justify-items-center items-center grid-cols-6">
-									<p className="col-start-1">{page === 1 ? key + 1 : key + 1 + 10 * (page - 1)} )</p>
+									<p className="col-start-1">{page === 1 ? key + 1 : key + 1 + rows * (page - 1)} )</p>
 									<p>{element.createdAt}</p>
 									{element.type === "Income" ? <p>{element.amount}</p> : <p>-{element.amount}</p>}
 									<p>{element.description}</p>
@@ -196,29 +205,42 @@ export default function ExpenseList() {
 						);
 					})}
 				</ol>
-				<div className="flex justify-center p-4 gap-4 ">
-					{/* First page */}
-					<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} w-fit rounded-md`} name="first" onClick={handlePages}>
-						{page > 1 ? "First Page" : ""}
-					</button>
 
-					{/* Prev Page */}
-					<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} rounded-md w-12`} name="prev" onClick={handlePages}>
-						{page > 1 ? page - 1 : ""}
-					</button>
+				<div className="flex flex-col justify-center p-4 gap-4 ">
+					<div className="flex justify-center gap-2">
+						<p className="flex items-center text-2xl font-semibold">Rows : </p>
+						<select className="w-fit p-2 text-center text-lg font-bold rounded-md bg-[#f5eec9]" onChange={handleRows} value={rows}>
+							<option>5</option>
+							<option>10</option>
+							<option>15</option>
+							<option>20</option>
+							<option>25</option>
+						</select>
+					</div>
+					<div className="flex justify-center p-4 gap-4">
+						{/* First page */}
+						<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} w-fit rounded-md`} name="first" onClick={handlePages}>
+							{page > 1 ? "First Page" : ""}
+						</button>
 
-					{/* Current Page */}
-					<button className="p-1 bg-sky-400 rounded-md w-12 scale-125">{page}</button>
+						{/* Prev Page */}
+						<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} rounded-md w-12`} name="prev" onClick={handlePages}>
+							{page > 1 ? page - 1 : ""}
+						</button>
 
-					{/* Next Page */}
-					<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-12`} name="next" onClick={handlePages}>
-						{page < lastPage ? page + 1 : ""}
-					</button>
+						{/* Current Page */}
+						<button className="p-1 bg-sky-400 rounded-md w-12 scale-125">{page}</button>
 
-					{/* Last Page */}
-					<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-fit`} name="last" onClick={handlePages}>
-						{page < lastPage ? "Last Page" : ""}
-					</button>
+						{/* Next Page */}
+						<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-12`} name="next" onClick={handlePages}>
+							{page < lastPage ? page + 1 : ""}
+						</button>
+
+						{/* Last Page */}
+						<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-fit`} name="last" onClick={handlePages}>
+							{page < lastPage ? "Last Page" : ""}
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
