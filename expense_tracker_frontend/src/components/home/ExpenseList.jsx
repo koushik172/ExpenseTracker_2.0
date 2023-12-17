@@ -23,15 +23,35 @@ export default function ExpenseList() {
 	// HOLDS TOTAL EXPENSE
 	const [totalExpense, setTotalExpense] = useState("");
 
+	// PAGINATION
+	const [page, setPage] = useState(1);
+	const [lastPage, setLastPage] = useState("");
+
 	function handleSort(e) {
 		let option = e.target.value;
 		setSortOptions(option);
 		localStorage.setItem("sort", option);
 	}
 
+	function handlePages(e) {
+		if (e.target.name === "next") {
+			setPage((prev) => prev + 1);
+		} else if (e.target.name === "last") {
+			setPage(lastPage);
+		} else if (e.target.name === "prev") {
+			if (page === 1) return;
+			setPage((prev) => prev - 1);
+		} else if (e.target.name === "first") {
+			setPage(1);
+		}
+	}
+
 	async function getExpenses() {
 		try {
-			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/`, { headers: { Authorization: localStorage.getItem("token") } });
+			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/${page}`, {
+				headers: { Authorization: localStorage.getItem("token") },
+			});
+			setLastPage(Math.ceil(res.data.count / 10));
 			setTotalExpense(res.data.total_expense);
 			setExpenses(() => {
 				format(new Date(), "dd/mm/yyyy");
@@ -114,6 +134,10 @@ export default function ExpenseList() {
 		}
 	}, [formStatus]);
 
+	useEffect(() => {
+		getExpenses();
+	}, [page]);
+
 	return (
 		<div className="bg-[#dfdd61] text-[#33689e] mx-[5%] rounded-md">
 			<div className="flex justify-between px-[2%]  pt-8">
@@ -125,7 +149,7 @@ export default function ExpenseList() {
 
 			{expenses.length === 0 && <li className="flex justify-center text-2xl pt-8">No Records Found</li>}
 
-			{
+			<div>
 				<ol className="p-8">
 					<li className="grid grid-cols-6 rounded-md border-2 ">
 						<div className="grid col-span-5 grid-cols-6 justify-items-center font-bold text-3xl m-4">
@@ -155,7 +179,7 @@ export default function ExpenseList() {
 						return (
 							<li className="grid grid-cols-6 py-2" id={key} key={key}>
 								<div className="grid col-span-5 justify-items-center items-center grid-cols-6">
-									<p className="col-start-1">{key + 1} )</p>
+									<p className="col-start-1">{page === 1 ? key + 1 : key + 1 + 10 * (page - 1)} )</p>
 									<p>{element.createdAt}</p>
 									{element.type === "Income" ? <p>{element.amount}</p> : <p>-{element.amount}</p>}
 									<p>{element.description}</p>
@@ -172,7 +196,31 @@ export default function ExpenseList() {
 						);
 					})}
 				</ol>
-			}
+				<div className="flex justify-center p-4 gap-4 ">
+					{/* First page */}
+					<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} w-fit rounded-md`} name="first" onClick={handlePages}>
+						{page > 1 ? "First Page" : ""}
+					</button>
+
+					{/* Prev Page */}
+					<button className={`p-1 ${page > 1 ? "bg-sky-500" : ""} rounded-md w-12`} name="prev" onClick={handlePages}>
+						{page > 1 ? page - 1 : ""}
+					</button>
+
+					{/* Current Page */}
+					<button className="p-1 bg-sky-400 rounded-md w-12 scale-125">{page}</button>
+
+					{/* Next Page */}
+					<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-12`} name="next" onClick={handlePages}>
+						{page < lastPage ? page + 1 : ""}
+					</button>
+
+					{/* Last Page */}
+					<button className={`p-1 ${page < lastPage ? "bg-sky-500" : ""} rounded-md w-fit`} name="last" onClick={handlePages}>
+						{page < lastPage ? "Last Page" : ""}
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }
