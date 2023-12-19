@@ -33,7 +33,7 @@ export default function ExpenseForm() {
 			});
 			setFromStatus("New Expense Added");
 		} catch (err) {
-			console.log(err);
+			console.log(err.message);
 		} finally {
 			setTimeout(() => {
 				setFromStatus("");

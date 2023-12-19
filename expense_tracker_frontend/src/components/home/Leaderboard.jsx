@@ -12,7 +12,7 @@ export default function Leaderboard() {
 			.then((res) => {
 				setleaderboard(res.data);
 			})
-			.catch((err) => console.log(err, "getLeaderboard"));
+			.catch((err) => console.log(err));
 	}
 
 	async function handleLeaderboardClick() {

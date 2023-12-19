@@ -1,8 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import Sequelize from "sequelize";
 
-const sequelize = new Sequelize("expense_tracker_2.0", "root", "1234", {
+const sequelize = new Sequelize(process.env.MY_SQL_DATABASE, process.env.MY_SQL_USER, process.env.MY_SQL_PASSWORD, {
 	dialect: "mysql",
-	host: "localhost",
+	host: process.env.MY_SQL_HOST,
 });
 
 export default sequelize;

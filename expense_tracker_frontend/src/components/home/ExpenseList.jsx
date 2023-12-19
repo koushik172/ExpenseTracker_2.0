@@ -57,7 +57,6 @@ export default function ExpenseList() {
 			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/${rows}/${page}`, {
 				headers: { Authorization: localStorage.getItem("token") },
 			});
-			console.log(res.data);
 			setLastPage(Math.ceil(res.data.count / rows));
 			setTotalExpense(res.data.total_expense);
 			setExpenses(() => {
@@ -92,7 +91,7 @@ export default function ExpenseList() {
 				});
 			});
 		} catch (err) {
-			console.log(err, "get expense error");
+			console.log(err.message);
 			navigate("/login");
 		}
 	}
@@ -112,7 +111,7 @@ export default function ExpenseList() {
 				setFromStatus("");
 			}, 5000);
 		} catch (err) {
-			console.log(err);
+			console.log(err.message);
 		}
 	}
 
