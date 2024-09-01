@@ -14,10 +14,9 @@
 		"jsonwebtoken": "^9.0.2",
 		"jspdf": "^2.5.1",
 		"jspdf-autotable": "^3.8.1",
+		"mongoose": "^8.6.0",
 		"morgan": "^1.10.0",
-		"mysql2": "^3.6.5",
 		"razorpay": "^2.9.2",
-		"sequelize": "^6.35.1",
 		"sib-api-v3-sdk": "^8.5.0",
 		"uuid": "^9.0.1"
 	},

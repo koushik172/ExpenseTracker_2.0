@@ -9,4 +9,7 @@ orderRouter.post("/new-order", Authenticate, orderController.newOrder);
 
 orderRouter.post("/payment/success", Authenticate, orderController.orderSuccess);
 
+orderRouter.post("/make-premium", Authenticate, orderController.makePremium);
+
+
 export default orderRouter;

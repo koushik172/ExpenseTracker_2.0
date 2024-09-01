@@ -95,7 +95,7 @@ export default function ExpenseForm() {
 
 				<div className="flex flex-col lg:flex-row gap-2">
 					<label htmlFor="type" className="p-1 font-semibold">
-						Tpye
+						Type
 					</label>
 					<select className="p-1 rounded-md bg-[#f5eec9] items-center" name="type" id="type" value={formData.type} onChange={handleChange}>
 						<option>Expense</option>

@@ -84,6 +84,20 @@ export default function BuyPremium() {
 		paymentObject.open();
 	}
 
+	async function makePremium(e) {
+		e.preventDefault();
+
+		if (premium) return alert("Already a premium user");
+
+		const result = await axios.post(
+			"http://localhost:8080/orders/make-premium",
+			{},
+			{ headers: { Authorization: localStorage.getItem("token") } }
+		);
+
+		setPremium(true);
+	}
+
 	async function isPremium() {
 		let res = await axios.get("http://localhost:8080/user/is-premium", { headers: { Authorization: localStorage.getItem("token") } });
 		localStorage.setItem("premium", res.data);
@@ -98,7 +112,7 @@ export default function BuyPremium() {
 
 	return (
 		<button
-			onClick={displayRazorpay}
+			onClick={makePremium}
 			className="bg-gradient-to-br from-sky-400 to-yellow-500 hover:bg-gradient-to-tl hover:from-sky-400 hover:to-yellow-500 bg- transition-all duration-1000 h-fit p-1 rounded-lg border-4 border-green-600"
 		>
 			{!premium ? "Get Premium" : "Premium User"}

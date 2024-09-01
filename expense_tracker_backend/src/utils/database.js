@@ -1,11 +1,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import Sequelize from "sequelize";
+import mongoose from "mongoose";
 
-const sequelize = new Sequelize(process.env.MY_SQL_DATABASE, process.env.MY_SQL_USER, process.env.MY_SQL_PASSWORD, {
-	dialect: "mysql",
-	host: process.env.MY_SQL_HOST,
-});
+async function database() {
+	await mongoose
+		.connect(
+			`mongodb+srv://koushik62:${process.env.MONGO_PASSWORD}@cluster0.st9gmr0.mongodb.net/expense-tracker?retryWrites=true&w=majority&appName=Cluster0`
+		)
+		.catch((err) => {
+			console.log(err);
+		});
+}
 
-export default sequelize;
+export default database;

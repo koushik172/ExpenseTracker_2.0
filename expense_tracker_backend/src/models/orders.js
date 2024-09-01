@@ -1,32 +1,29 @@
-import Sequelize from "sequelize";
+import mongoose from "mongoose";
 
-import sequelize from "../utils/database.js";
-
-const Order = sequelize.define("orders", {
+const orderSchema = mongoose.Schema({
 	orderCreationId: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		primaryKey: true,
+		type: String,
+		required: true,
 	},
 	amount: {
-		type: Sequelize.INTEGER,
+		type: Number,
 	},
 	currency: {
-		type: Sequelize.STRING,
+		type: String,
 	},
 	razorpayPaymentId: {
-		type: Sequelize.STRING,
+		type: String,
 	},
 	razorpayOrderId: {
-		type: Sequelize.STRING,
+		type: String,
 	},
 	razorpaySignature: {
-		type: Sequelize.STRING,
+		type: String,
 	},
 	status: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type: String,
+		required: true,
 	},
 });
 
-export default Order;
+export default mongoose.model("Order", orderSchema);

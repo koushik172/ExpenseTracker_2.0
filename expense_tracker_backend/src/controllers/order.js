@@ -2,12 +2,10 @@ import crypto from "crypto";
 
 import Razorpay from "razorpay";
 
-import sequelize from "../utils/database.js";
 import Order from "../models/orders.js";
 
 export const newOrder = async (req, res) => {
 	if (req.user.premium) res.status(500).json("Already a Premium User");
-	const transaction = await sequelize.transaction();
 	try {
 		const instance = new Razorpay({
 			key_id: process.env.RAZORPAY_KEY_ID,
@@ -24,26 +22,22 @@ export const newOrder = async (req, res) => {
 
 		if (!order) return res.status(500).send("Some error occured");
 
-		await req.user.createOrder(
-			{
-				orderCreationId: order.id,
-				amount: order.amount,
-				currency: order.currency,
-				status: "PENDING",
-			},
-			{ transaction: transaction }
-		);
+		const orderdb = new Order({
+			orderCreationId: order.id,
+			amount: order.amount,
+			currency: order.currency,
+			status: "PENDING",
+		});
+		orderdb.save();
+
 		res.json(order);
-		await transaction.commit();
 	} catch (error) {
 		console.log(error);
 		res.status(500).send(error);
-		await transaction.rollback();
 	}
 };
 
 export const orderSuccess = async (req, res) => {
-	const transaction = await sequelize.transaction();
 	try {
 		// getting the details back from our font-end
 		const { orderCreationId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
@@ -60,19 +54,19 @@ export const orderSuccess = async (req, res) => {
 
 		// comaparing our digest with the actual signature
 		if (digest !== razorpaySignature) {
-			await Order.update({ status: "FAILED" }, { where: { orderCreationId: req.body.orderCreationId } });
+			await Order.findOneAndUpdate({ orderCreationId: req.body.orderCreationId }, { status: "FAILED" });
 			return res.status(400).json({ msg: "Transaction not legit!" });
 		}
 
 		// THE PAYMENT IS LEGIT & VERIFIED
 		// YOU CAN SAVE THE DETAILS IN YOUR DATABASE IF YOU WANT
 
-		await Order.update(
-			{ razorpayOrderId: razorpayOrderId, razorpayPaymentId: razorpayPaymentId, razorpaySignature: razorpaySignature, status: "SUCCESS" },
-			{ where: { orderCreationId: orderCreationId } },
-			{ transaction: transaction }
+		await Order.findOneAndUpdate(
+			{ orderCreationId: orderCreationId },
+			{ razorpayOrderId: razorpayOrderId, razorpayPaymentId: razorpayPaymentId, razorpaySignature: razorpaySignature, status: "SUCCESS" }
 		);
-		await req.user.update({ premium: 1 }, { transaction: transaction });
+		req.user.premium = 1;
+		await req.user.save();
 
 		res.json({
 			msg: "success",
@@ -83,7 +77,11 @@ export const orderSuccess = async (req, res) => {
 		console.log(error);
 		await Order.update({ status: "FAILED" }, { where: { orderCreationId: orderCreationId } }, { transaction: transaction });
 		res.status(500).send(error);
-	} finally {
-		await transaction.commit();
 	}
+};
+
+export const makePremium = async (req, res) => {
+	req.user.premium = true;
+	req.user.save();
+	res.json({ msg: "success" });
 };

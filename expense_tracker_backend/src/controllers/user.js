@@ -1,15 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 
-import { Email } from "../utils/email.js";
-
-import sequelize from "../utils/database.js";
 import User from "../models/user.js";
+import { Email } from "../utils/email.js";
 import ForgotPasswordRequest from "../models/forgotPassword.js";
 
 export const signup = async (req, res) => {
-	const transaction = await sequelize.transaction();
 	let hash;
 
 	try {
@@ -19,26 +15,22 @@ export const signup = async (req, res) => {
 	}
 
 	try {
-		await User.create(
-			{
-				name: req.body.name,
-				email: req.body.email,
-				password: hash,
-				total_expense: 0,
-			},
-			{ transaction: transaction }
-		);
+		let user = await User({
+			name: req.body.name,
+			email: req.body.email,
+			password: hash,
+			total_expense: 0,
+		});
+		await user.save();
 		res.status(201).send({ Message: "User Created Sucessfully." });
-		await transaction.commit();
 	} catch (error) {
 		console.log(error);
 		res.status(409).send({ Message: "User Already Exists." });
-		await transaction.rollback();
 	}
 };
 
 export const login = async (req, res) => {
-	User.findOne({ where: { email: req.body.email } })
+	User.findOne({ email: req.body.email })
 		.then(async (result) => {
 			// password get a binay value to see if it is correct.
 			let password = await bcrypt.compare(req.body.password, result.password);
@@ -61,39 +53,33 @@ export const login = async (req, res) => {
 };
 
 export const forgot_password = async (req, res, next) => {
-	const transaction = await sequelize.transaction();
 	try {
-		let user = await User.findOne({ where: { email: req.body.email } });
+		const user = await User.findOne({ email: req.body.email });
 
-		let uuid = uuidv4();
+		const forgotPassword = new ForgotPasswordRequest({
+			userId: user._id,
+		});
 
-		let body = `<p>Click on the link to reset your password</p><p>http://localhost:5173/reset-password/${uuid}</p>`;
+		let body = `<p>Click on the link to reset your password</p><p>http://localhost:5173/reset-password/${forgotPassword._id}</p>`;
 		let data = { name: user.name, email: user.email, subject: "Password reset request.", body: body };
 		await Email(data);
 
-		await user.createForgotPasswordRequest({ id: uuid, isActive: true }, { transaction: transaction });
-
 		res.status(200).json("Password reset link sent.");
-		await transaction.commit();
 	} catch (error) {
 		console.log(error);
 		res.status(500).json("Email doesn't exist.");
-		await transaction.rollback();
 	}
 };
 
 export const reset_password = async (req, res, next) => {
-	const transaction = await sequelize.transaction();
-	let verify = uuidValidate(req.params.id);
-	if (!verify) return res.status(401).json("Invalid Request.");
+	let request = await ForgotPasswordRequest.findOne({ _id: req.params.id });
+	if (!request) return res.status(401).json("Invalid Request.");
 
-	let request;
 	let user;
 
 	try {
-		request = await ForgotPasswordRequest.findOne({ where: { id: req.params.id } });
 		if (!request.isActive) return res.status(401).json("Link Expired.");
-		user = await User.findOne({ where: { id: request.userId } });
+		user = await User.findOne({ _id: request.userId });
 	} catch (error) {
 		res.status(404).send("Unauthorised");
 	}
@@ -109,18 +95,22 @@ export const reset_password = async (req, res, next) => {
 	}
 
 	try {
-		await request.update({ isActive: false }, { transaction: transaction });
-		await user.update({ password: hash }, { transaction: transaction });
+		request.isActive = false;
+		user.password = hash;
+
+		await request.save();
+		await user.save();
+
 		res.status(200).json("Password Change Successful");
-		transaction.commit();
 	} catch (error) {
 		res.status(500).json("Unknown Error");
-		transaction.rollback();
 	}
 };
 
 export const is_premuim = (req, res) => {
-	if (req.user.premium === true) {
+	console.log(req.user);
+
+	if (req.user.premium === "true") {
 		res.status(200).json(true);
 	} else {
 		res.status(200).json(false);

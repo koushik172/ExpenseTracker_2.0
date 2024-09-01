@@ -1,17 +1,14 @@
-import { Sequelize } from "sequelize";
+import mongoose from "mongoose";
 
-import sequelize from "../utils/database.js";
-
-const ForgotPasswordRequest = sequelize.define("forgotPasswordRequests", {
-	id: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		primaryKey: true,
+const forgotPasswordSchema = mongoose.Schema({
+	userId: {
+		type: mongoose.Types.ObjectId,
+		required: true,
 	},
 	isActive: {
-		type: Sequelize.BOOLEAN,
-		default: 1,
+		type: Boolean,
+		default: true,
 	},
 });
 
-export default ForgotPasswordRequest;
+export default mongoose.model("ForgotPasswordRequest", forgotPasswordSchema);

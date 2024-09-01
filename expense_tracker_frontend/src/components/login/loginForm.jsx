@@ -47,6 +47,8 @@ export default function LoginForm() {
 			} else {
 				setFormMessage("An Error Occoured. Try Again Later");
 			}
+			console.log(err);
+			
 		} finally {
 			submitRef.current.disabled = false;
 		}

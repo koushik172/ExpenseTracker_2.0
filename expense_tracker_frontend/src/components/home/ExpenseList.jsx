@@ -57,36 +57,43 @@ export default function ExpenseList() {
 			let res = await axios.get(`http://localhost:8080/expenses/get-expenses/${rows}/${page}`, {
 				headers: { Authorization: localStorage.getItem("token") },
 			});
+
+			console.log(res);
+
 			setLastPage(Math.ceil(res.data.count / rows));
 			setTotalExpense(res.data.total_expense);
+
 			setExpenses(() => {
 				format(new Date(), "dd/mm/yyyy");
 				return res.data.expenses.filter((item) => {
-					let itemDate = new Date(item.createdAt);
-					item.createdAt = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
+					let itemDate = new Date(item.date);
+					item.date = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
 					return itemDate;
 				});
 			});
+
 			setDailyExpenses(() => {
 				let now = new Date();
 				return res.data.expenses.filter((item) => {
-					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					let itemDate = parse(item.date, "dd/MM/yyyy", new Date());
 					return (
 						itemDate.getDay() === now.getDay() && itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear()
 					);
 				});
 			});
+
 			setMonthlyExpenses(() => {
 				let now = new Date();
 				return res.data.expenses.filter((item) => {
-					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					let itemDate = parse(item.date, "dd/MM/yyyy", new Date());
 					return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
 				});
 			});
+
 			setYearlyExpenses(() => {
 				let now = new Date();
 				return res.data.expenses.filter((item) => {
-					let itemDate = parse(item.createdAt, "dd/MM/yyyy", new Date());
+					let itemDate = parse(item.date, "dd/MM/yyyy", new Date());
 					return itemDate.getFullYear() === now.getFullYear();
 				});
 			});
@@ -97,9 +104,10 @@ export default function ExpenseList() {
 	}
 
 	async function deleteExpense(e) {
-		let id = e.target.id;
 		let li = e.target.closest("li");
+		let id = li.id;
 		let amount = li.querySelectorAll("p")[2].textContent;
+
 		try {
 			await axios.delete(`http://localhost:8080/expenses/delete-expense/${id}`, {
 				headers: { Authorization: localStorage.getItem("token") },
@@ -185,10 +193,10 @@ export default function ExpenseList() {
 						if (sortOptions === "Yearly") return Object.values(yearlyExpenses);
 					})().map((element, key) => {
 						return (
-							<li className="grid grid-cols-6 py-2" id={key} key={key}>
+							<li className="grid grid-cols-6 py-2" id={element._id} key={key}>
 								<div className="grid col-span-5 justify-items-center items-center grid-cols-6">
 									<p className="col-start-1">{page === 1 ? key + 1 : key + 1 + rows * (page - 1)} )</p>
-									<p>{element.createdAt}</p>
+									<p>{element.date}</p>
 									{element.type === "Income" ? <p>{element.amount}</p> : <p>-{element.amount}</p>}
 									<p>{element.description}</p>
 									<p>{element.category}</p>
