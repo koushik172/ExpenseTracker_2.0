@@ -108,8 +108,6 @@ export const reset_password = async (req, res, next) => {
 };
 
 export const is_premuim = (req, res) => {
-	console.log(req.user);
-
 	if (req.user.premium === "true") {
 		res.status(200).json(true);
 	} else {
@@ -118,12 +116,7 @@ export const is_premuim = (req, res) => {
 };
 
 export const leaderboard = async (req, res) => {
-	// const results = await sequelize.query(
-	// 	"SELECT users.id, users.name, SUM(expenses.amount) as total_expense FROM users INNER JOIN expenses ON users.id = expenses.userId GROUP BY users.id, users.name ORDER BY total_expense DESC LIMIT 0, 100"
-	// );
-	const users = await User.findAll({
-		attributes: ["name", "total_expense"],
-		order: [[sequelize.col("total_expense"), "DESC"]],
-	});
+	const users = await User.find({}, "name total_expense").sort({ total_expense: -1 });
+	console.log(users);
 	res.status(200).json(users);
 };

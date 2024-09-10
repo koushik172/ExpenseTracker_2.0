@@ -4,6 +4,8 @@ import * as userController from "../controllers/user.js";
 import { Authenticate } from "../middlewares/auth.js";
 import { Premium } from "../middlewares/premium.js";
 
+import User from "../models/user.js";
+
 const userRouter = express.Router();
 
 userRouter.post("/signup", userController.signup);

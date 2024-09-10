@@ -11,6 +11,7 @@ export default function Leaderboard() {
 			.get("http://localhost:8080/user/leaderboard", { headers: { Authorization: localStorage.getItem("token") } })
 			.then((res) => {
 				setleaderboard(res.data);
+				console.log(res.data);
 			})
 			.catch((err) => console.log(err));
 	}

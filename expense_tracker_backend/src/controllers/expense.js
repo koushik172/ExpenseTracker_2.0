@@ -30,16 +30,10 @@ export const addExpense = async (req, res) => {
 
 export const getExpenses = async (req, res) => {
 	if (req.params.page < 1) return res.status(404).json("Not Found");
-	// let offset = (req.params.page - 1) * req.params.rows;
+	let offset = (req.params.page - 1) * req.params.rows;
 	try {
-		// const { count, rows } = await Expense.findAndCountAll({
-		// 	attributes: ["id", "amount", "description", "category", "type", "createdAt"],
-		// 	where: { userId: req.user.id },
-		// 	order: [["createdAt", "DESC"]],
-		// 	offset: offset,
-		// 	limit: parseInt(req.params.rows),
-		// });
-		res.status(200).json({ expenses: req.user.expenses, total_expense: req.user.total_expense, count: req.user.expenses.length });
+		const expenses = req.user.expenses.slice(offset, offset + req.params.rows);
+		res.status(200).json({ expenses: expenses, total_expense: req.user.total_expense, count: req.user.expenses.length });
 	} catch (err) {
 		console.log(err);
 		res.status(404).json("Unknown Error Occoured!");
