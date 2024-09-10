@@ -1,22 +1,14 @@
-// import Sequelize from "sequelize";
+import mongoose from "mongoose";
 
-// import sequelize from "../utils/database.js";
+const reportSchema = mongoose.Schema({
+	fileUrl: {
+		type: Sequelize.STRING,
+		required: true,
+	},
+	fileName: {
+		type: Sequelize.STRING,
+		required: true,
+	},
+});
 
-// const Report = sequelize.define("reports", {
-// 	id: {
-// 		type: Sequelize.INTEGER,
-// 		autoIncrement: true,
-// 		allowNull: false,
-// 		primaryKey: true,
-// 	},
-// 	fileUrl: {
-// 		type: Sequelize.STRING,
-// 		allowNull: false,
-// 	},
-// 	fileName: {
-// 		type: Sequelize.STRING,
-// 		allowNull: false,
-// 	},
-// });
-
-// export default Report;
+export default mongoose.model("reportSchema", reportSchema);
